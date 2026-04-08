@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CompeteWatch - 竞品监控</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#6366f1',
+            dark: '#0f0f0f',
+            card: '#1a1a1a',
+            border: '#2a2a2a'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+  </style>
+</head>
+<body class="bg-dark text-gray-100 min-h-screen">
+  <!-- Header -->
+  <header class="border-b border-border bg-card/50 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl gradient-bg flex items-center justify-center">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+        <span class="text-xl font-bold">CompeteWatch</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="text-sm text-gray-400" id="lastUpdate">最后更新: --</span>
+        <button onclick="refreshAll()" class="px-4 py-2 bg-primary hover:bg-primary/80 rounded-lg text-sm font-medium transition">
+          刷新全部
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" id="statsSection">
+      <div class="bg-card rounded-2xl p-6 border border-border">
+        <div class="flex items-center justify-between mb-4">
+          <span class="text-gray-400 text-sm">监控中的竞品</span>
+          <div class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="text-3xl font-bold" id="activeCount">0</div>
+      </div>
+      
+      <div class="bg-card rounded-2xl p-6 border border-border">
+        <div class="flex items-center justify-between mb-4">
+          <span class="text-gray-400 text-sm">今日变化</span>
+          <div class="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+            </svg>
+          </div>
+        </div>
+        <div class="text-3xl font-bold" id="changesCount">0</div>
+      </div>
+      
+      <div class="bg-card rounded-2xl p-6 border border-border">
+        <div class="flex items-center justify-between mb-4">
+          <span class="text-gray-400 text-sm">总竞品数</span>
+          <div class="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+          </div>
+        </div>
+        <div class="text-3xl font-bold" id="totalCount">0</div>
+      </div>
+    </div>
+
+    <!-- Add Competitor Form -->
+    <div class="bg-card rounded-2xl p-6 border border-border mb-8">
+      <h2 class="text-lg font-semibold mb-4">添加竞品监控</h2>
+      <form id="addForm" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <input type="text" id="compName" placeholder="竞品名称" required
+          class="bg-dark border border-border rounded-lg px-4 py-3 focus:outline-none focus:border-primary">
+        <input type="url" id="compUrl" placeholder="监控URL" required
+          class="bg-dark border border-border rounded-lg px-4 py-3 focus:outline-none focus:border-primary md:col-span-2">
+        <select id="compType" class="bg-dark border border-border rounded-lg px-4 py-3 focus:outline-none focus:border-primary">
+          <option value="price">价格监控</option>
+          <option value="changelog">更新日志</option>
+          <option value="article">文章发布</option>
+          <option value="seo">SEO排名</option>
+        </select>
+        <button type="submit" class="bg-primary hover:bg-primary/80 rounded-lg font-medium transition">
+          添加监控
+        </button>
+      </form>
+      <input type="text" id="compSelector" placeholder="CSS选择器（可选，如 .price）"
+        class="mt-4 w-full bg-dark border border-border rounded-lg px-4 py-3 focus:outline-none focus:border-primary">
+    </div>
+
+    <!-- Competitors List -->
+    <div class="bg-card rounded-2xl border border-border overflow-hidden">
+      <div class="px-6 py-4 border-b border-border flex items-center justify-between">
+        <h2 class="text-lg font-semibold">竞品列表</h2>
+        <span class="text-sm text-gray-400" id="listCount">共 0 个</span>
+      </div>
+      <div id="competitorList" class="divide-y divide-border">
+        <div class="p-8 text-center text-gray-500">
+          暂无竞品，点击上方添加
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Changes -->
+    <div class="bg-card rounded-2xl border border-border overflow-hidden mt-8">
+      <div class="px-6 py-4 border-b border-border">
+        <h2 class="text-lg font-semibold">最近变化</h2>
+      </div>
+      <div id="changesList" class="divide-y divide-border max-h-96 overflow-y-auto">
+        <div class="p-8 text-center text-gray-500">
+          暂无变化记录
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-card border border-border px-6 py-3 rounded-xl opacity-0 transition-opacity pointer-events-none">
+    <span id="toastMsg"></span>
+  </div>
+
+  <script>
+    const API = '/api';
+
+    // Load dashboard data
+    async function loadDashboard() {
+      try {
+        const res = await fetch(`${API}/dashboard`);
+        const data = await res.json();
+        
+        document.getElementById('totalCount').textContent = data.total_competitors;
+        document.getElementById('activeCount').textContent = data.active_competitors;
+        document.getElementById('changesCount').textContent = data.recent_changes;
+        document.getElementById('lastUpdate').textContent = `最后更新: ${new Date().toLocaleTimeString()}`;
+        
+        // Render recent changes
+        if (data.changes && data.changes.length > 0) {
+          const changesHtml = data.changes.map(c => `
+            <div class="px-6 py-4 hover:bg-dark/50 transition">
+              <div class="flex items-center justify-between">
+                <div>
+                  <span class="font-medium text-primary">${c.competitor_name}</span>
+                  <span class="text-gray-400 text-sm ml-2">${c.change_type}</span>
+                </div>
+                <span class="text-gray-500 text-sm">${new Date(c.detected_at).toLocaleString()}</span>
+              </div>
+            </div>
+          `).join('');
+          document.getElementById('changesList').innerHTML = changesHtml;
+        }
+      } catch (e) {
+        console.error('Failed to load dashboard:', e);
+      }
+    }
+
+    // Load competitors
+    async function loadCompetitors() {
+      try {
+        const res = await fetch(`${API}/competitors`);
+        const competitors = await res.json();
+        
+        document.getElementById('listCount').textContent = `共 ${competitors.length} 个`;
+        
+        if (competitors.length === 0) {
+          document.getElementById('competitorList').innerHTML = `
+            <div class="p-8 text-center text-gray-500">
+              暂无竞品，点击上方添加
+            </div>
+          `;
+          return;
+        }
+        
+        const html = competitors.map(c => `
+          <div class="px-6 py-4 hover:bg-dark/50 transition flex items-center justify-between group">
+            <div class="flex items-center gap-4">
+              <div class="w-2 h-2 rounded-full ${c.is_active ? 'bg-green-500' : 'bg-gray-500'}"></div>
+              <div>
+                <div class="font-medium">${c.name}</div>
+                <div class="text-sm text-gray-500 truncate max-w-md">${c.url}</div>
+              </div>
+              <span class="text-xs px-2 py-1 rounded bg-primary/20 text-primary">${c.monitor_type}</span>
+            </div>
+            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+              <button onclick="checkOne(${c.id})" class="px-3 py-1 text-sm bg-primary/20 hover:bg-primary/40 rounded transition">
+                检查
+              </button>
+              <button onclick="viewChanges(${c.id})" class="px-3 py-1 text-sm bg-blue-500/20 hover:bg-blue-500/40 rounded transition">
+                历史
+              </button>
+              <button onclick="deleteOne(${c.id})" class="px-3 py-1 text-sm bg-red-500/20 hover:bg-red-500/40 rounded transition">
+                删除
+              </button>
+            </div>
+          </div>
+        `).join('');
+        
+        document.getElementById('competitorList').innerHTML = html;
+      } catch (e) {
+        console.error('Failed to load competitors:', e);
+      }
+    }
+
+    // Add competitor
+    document.getElementById('addForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const data = {
+        name: document.getElementById('compName').value,
+        url: document.getElementById('compUrl').value,
+        monitor_type: document.getElementById('compType').value,
+        selector: document.getElementById('compSelector').value || null
+      };
+      
+      try {
+        const res = await fetch(`${API}/competitors`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        if (res.ok) {
+          showToast('添加成功');
+          document.getElementById('addForm').reset();
+          loadCompetitors();
+          loadDashboard();
+        } else {
+          showToast('添加失败');
+        }
+      } catch (e) {
+        showToast('请求失败');
+      }
+    });
+
+    // Check one
+    async function checkOne(id) {
+      try {
+        await fetch(`${API}/competitors/${id}/check`, { method: 'POST' });
+        showToast('已触发检查');
+        setTimeout(loadDashboard, 2000);
+      } catch (e) {
+        showToast('检查失败');
+      }
+    }
+
+    // View changes
+    async function viewChanges(id) {
+      try {
+        const res = await fetch(`${API}/competitors/${id}/changes`);
+        const changes = await res.json();
+        
+        if (changes.length === 0) {
+          showToast('暂无变化记录');
+          return;
+        }
+        
+        alert(changes.map(c => 
+          `${new Date(c.detected_at).toLocaleString()}\n${c.change_type}\n旧值: ${c.old_value}\n新值: ${c.new_value}`
+        ).join('\n\n'));
+      } catch (e) {
+        showToast('获取失败');
+      }
+    }
+
+    // Delete one
+    async function deleteOne(id) {
+      if (!confirm('确定删除该竞品？')) return;
+      
+      try {
+        await fetch(`${API}/competitors/${id}`, { method: 'DELETE' });
+        showToast('已删除');
+        loadCompetitors();
+        loadDashboard();
+      } catch (e) {
+        showToast('删除失败');
+      }
+    }
+
+    // Refresh all
+    async function refreshAll() {
+      showToast('正在刷新...');
+      await Promise.all([loadCompetitors(), loadDashboard()]);
+      showToast('刷新完成');
+    }
+
+    // Toast
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      toast.classList.remove('opacity-0');
+      toast.classList.add('opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+      }, 2000);
+    }
+
+    // Init
+    loadCompetitors();
+    loadDashboard();
+  </script>
+</body>
+</html>

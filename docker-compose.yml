@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+      - ./frontend:/app/frontend
+    environment:
+      - DATABASE_URL=sqlite:///./data/competewatch.db
+    restart: unless-stopped
+
+  # Optional: PostgreSQL for production
+  # db:
+  #   image: postgres:15
+  #   environment:
+  #     POSTGRES_DB: competewatch
+  #     POSTGRES_USER: compwatch
+  #     POSTGRES_PASSWORD: secret
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
